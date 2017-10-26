@@ -57,7 +57,7 @@ public class RecordId implements Serializable {
         }
         
         RecordId tmp = (RecordId)o;
-        if(this.getPageId() == tmp.getPageId() && this.getTupleNumber() == tmp.getTupleNumber()){
+        if(this.getPageId().equals(tmp.getPageId()) && this.getTupleNumber() == tmp.getTupleNumber()){
         	return true;
         }
         
@@ -73,8 +73,10 @@ public class RecordId implements Serializable {
     @Override
     public int hashCode() {
         // some code goes here
-        throw new UnsupportedOperationException("implement this");
-
+        int result = 1;
+        result += this._pageId.hashCode();
+        result += this._tupleNo;
+        return result;
     }
 
 }
