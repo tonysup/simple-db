@@ -1,7 +1,8 @@
 package simpledb;
 
 import java.io.*;
-
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -27,6 +28,11 @@ public class BufferPool {
     public static final int DEFAULT_PAGES = 50;
     
     private int page = DEFAULT_PAGES;
+    private File file;
+    FileInputStream fi;
+    byte[] buffer;
+    private Map<PageId, Page> _pageMap = new HashMap<>();
+    int count = 0;
     /**
      * Creates a BufferPool that caches up to numPages pages.
      *
@@ -51,6 +57,17 @@ public class BufferPool {
     	BufferPool.pageSize = DEFAULT_PAGE_SIZE;
     }
 
+    public void setFile(File file){
+    	this.file = file;
+    	try {
+			fi = new FileInputStream(this.file);
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+    	buffer = new byte[pageSize];
+    }
+    
     /**
      * Retrieve the specified page with the associated permissions.
      * Will acquire a lock and may block if that lock is held by another
@@ -65,11 +82,37 @@ public class BufferPool {
      * @param tid the ID of the transaction requesting the page
      * @param pid the ID of the requested page
      * @param perm the requested permissions on the page
+     * @throws  
      */
     public  Page getPage(TransactionId tid, PageId pid, Permissions perm)
         throws TransactionAbortedException, DbException {
         // some code goes here
-        return null;
+    	Page page = _pageMap.get(pid);
+    	if(page != null){
+    		return page;
+    	}
+    	
+    	int offset = pid.getPageNumber()* this.pageSize;
+    	try {
+			int result = fi.read(buffer, offset, this.pageSize);
+			if(result == -1){
+				return null;
+			}
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+    	HeapPageId pageId = new HeapPageId(pid.getTableId(),pid.getPageNumber());
+    	Page tmp;
+    	try {
+			tmp = new HeapPage(pageId, buffer);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new DbException(e.toString());
+		}
+    	_pageMap.put(pid, tmp);
+        return tmp;
     }
 
     /**

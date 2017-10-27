@@ -17,6 +17,8 @@ public class HeapFile implements DbFile {
 
 	private File _file;
 	private TupleDesc _tupleDesc;
+	private int pageCount;
+	private BufferPool bufferPool;
     /**
      * Constructs a heap file backed by the specified file.
      * 
@@ -28,6 +30,9 @@ public class HeapFile implements DbFile {
         // some code goes here
     	this._file = f;
     	this._tupleDesc = td;
+    	this.pageCount = (int) Math.floor(f.length()/BufferPool.getPageSize());
+    	bufferPool = new BufferPool(this.pageCount);
+    	bufferPool.setFile(this._file);
     }
 
     /**
@@ -65,9 +70,23 @@ public class HeapFile implements DbFile {
     }
 
     // see DbFile.java for javadocs
-    public Page readPage(PageId pid) {
+    public Page readPage(PageId pid){
         // some code goes here
-        return null;
+    	if(pid.getPageNumber() >= this.pageCount){
+    		throw new IllegalArgumentException();
+    	}
+    	
+    	Page page = null;
+    	
+    	try{
+    		page = bufferPool.getPage(null, pid, Permissions.READ_ONLY);
+    	}catch(TransactionAbortedException ex){
+    		ex.printStackTrace();
+    	} catch (DbException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+        return page;
     }
 
     // see DbFile.java for javadocs
@@ -81,7 +100,7 @@ public class HeapFile implements DbFile {
      */
     public int numPages() {
         // some code goes here
-        return 0;
+        return this.pageCount;
     }
 
     // see DbFile.java for javadocs
@@ -103,6 +122,7 @@ public class HeapFile implements DbFile {
     // see DbFile.java for javadocs
     public DbFileIterator iterator(TransactionId tid) {
         // some code goes here
+        
         return null;
     }
 

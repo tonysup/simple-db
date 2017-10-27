@@ -20,7 +20,7 @@ public class HeapPageReadTest extends SimpleDbTestBase {
 
     public static final int[][] EXAMPLE_VALUES = new int[][] {
         { 31933, 862 },
-        { 29402, 56883 }/*,
+        { 29402, 56883 },
         { 1468, 5825 },
         { 17876, 52278 },
         { 6350, 36090 },
@@ -38,7 +38,7 @@ public class HeapPageReadTest extends SimpleDbTestBase {
         { 9086, 53184 },
         { 42878, 33394 },
         { 62778, 21122 },
-        { 17197, 16388 }*/
+        { 17197, 16388 }
     };
 
     public static final byte[] EXAMPLE_DATA;

@@ -46,7 +46,8 @@ public class HeapPage implements Page {
         DataInputStream dis = new DataInputStream(new ByteArrayInputStream(data));
 
         // allocate and read the header slots of this page
-        header = new byte[getHeaderSize()];
+        int count = getHeaderSize();
+        header = new byte[count];
         for (int i=0; i<header.length; i++)
             header[i] = dis.readByte();
         
@@ -283,8 +284,12 @@ public class HeapPage implements Page {
         // some code goes here
     	int count = 0;
     	for(int i = 0; i < header.length; ++i){
-    		if(header[i] == 0){
-    			count++;
+    		byte tmp = header[i];
+    		for(int j = 0; j < 8; ++j){
+    			if((tmp & 1) == 0){
+    				count ++;
+    			}
+    			tmp = (byte)(tmp >> 1);
     		}
     	}
         return count;
@@ -295,7 +300,12 @@ public class HeapPage implements Page {
      */
     public boolean isSlotUsed(int i) {
         // some code goes here
-        return header[i] == 1;
+    	byte tmp = header[i/8];
+    	int index = i%8;
+    	for(int j=1;j<=index;++j){
+    		tmp = (byte)(tmp >> 1);
+    	}
+        return (byte)(tmp & 1) == 1;
     }
 
     /**
@@ -312,7 +322,13 @@ public class HeapPage implements Page {
      */
     public Iterator<Tuple> iterator() {
         // some code goes here
-        return Arrays.asList(tuples).iterator();
+    	List<Tuple> list = new LinkedList<>();
+    	for(int i = 0; i < tuples.length; ++i){
+    		if(isSlotUsed(i)){
+    			list.add(tuples[i]);
+    		}
+    	}
+        return list.iterator();
     }
 
 }
