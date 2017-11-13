@@ -75,18 +75,32 @@ public class HeapFile implements DbFile {
     	if(pid.getPageNumber() >= this.pageCount){
     		throw new IllegalArgumentException();
     	}
-    	
-    	Page page = null;
-    	
-    	try{
-    		page = bufferPool.getPage(null, pid, Permissions.READ_ONLY);
-    	}catch(TransactionAbortedException ex){
-    		ex.printStackTrace();
-    	} catch (DbException e) {
+    	   	
+    	byte[] buffer = new byte[BufferPool.getPageSize()];
+    	int offset = pid.getPageNumber()* BufferPool.getPageSize();
+    	FileInputStream fi = null;
+    	Page tmp = null;
+    	try {
+    		fi = new FileInputStream(this._file);
+			int result = fi.read(buffer, offset, BufferPool.getPageSize());
+			if(result == -1){
+				return null;
+			}
+			HeapPageId pageId = new HeapPageId(pid.getTableId(),pid.getPageNumber());
+			tmp = new HeapPage(pageId, buffer);
+			return tmp;
+		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+		} finally {
+			try {
+				fi.close();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
-        return page;
+    	return tmp;
     }
 
     // see DbFile.java for javadocs
@@ -122,8 +136,17 @@ public class HeapFile implements DbFile {
     // see DbFile.java for javadocs
     public DbFileIterator iterator(TransactionId tid) {
         // some code goes here
+    	HeapPageId pid = new HeapPageId(this.getId(), 0);
+    	Page info = null;
+        try {
+			info = bufferPool.getPage(tid, pid, Permissions.READ_ONLY);
+		} catch (TransactionAbortedException | DbException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
         
-        return null;
+        HeapFileIterator iterator = new HeapFileIterator((HeapPage)info);
+        return iterator;
     }
 
 }
